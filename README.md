@@ -1,6 +1,4 @@
-# Virtual Payment
-
-Virtual payments for Ethereum
+# Virtual Payments for Ethereum
 
 ### Installation
 

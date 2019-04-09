@@ -68,6 +68,7 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
         const VALUE = new BN(100);
 
         const messageHash = soliditySha3(
+          manager.address,
           sender,
           receiver,
           ID,
@@ -122,6 +123,7 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
         const VALUE = new BN(200);
 
         const messageHash = soliditySha3(
+          manager.address,
           sender,
           receiver,
           ID,

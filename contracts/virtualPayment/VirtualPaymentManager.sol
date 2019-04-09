@@ -96,6 +96,7 @@ contract VirtualPaymentManager is AbstractVirtualPaymentManager {
   ) private returns (uint256 _processedValue) {
     bytes32 _messageHash = keccak256(
       abi.encodePacked(
+        address(this),
         _sender,
         _receiver,
         _id,

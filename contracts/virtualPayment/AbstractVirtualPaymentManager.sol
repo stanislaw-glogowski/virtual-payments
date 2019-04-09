@@ -31,7 +31,7 @@ contract AbstractVirtualPaymentManager {
 
   function depositPayment(
     address _sender,
-    address payable _receiver,
+    address _receiver,
     uint256 _id,
     uint256 _value,
     bytes memory _senderSignature,

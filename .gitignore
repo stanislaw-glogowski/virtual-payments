@@ -1,0 +1,10 @@
+.*
+!.editorconfig
+!.eslintignore
+!.eslintrc
+!.gitignore
+!.gitattributes
+!.npmignore
+build/
+node_modules/
+*.log

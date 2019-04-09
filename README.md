@@ -1,5 +1,7 @@
 # Virtual Payment
 
+Virtual Payment for Ethereum
+
 ### Installation
 
 ```bash

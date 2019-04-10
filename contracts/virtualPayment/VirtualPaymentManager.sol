@@ -12,10 +12,15 @@ contract VirtualPaymentManager is AbstractVirtualPaymentManager {
   using AddressLibrary for address;
   using SafeMath for uint256;
 
+  string constant ERR_INVALID_SIGNATURE = "Invalid signature";
+  string constant ERR_INVALID_VALUE = "Invalid value";
+
   constructor(
-    address _guardian
+    address _guardian,
+    uint256 _depositWithdrawalLockPeriod
   ) public {
     guardian = _guardian;
+    depositWithdrawalLockPeriod = _depositWithdrawalLockPeriod;
   }
 
   function() external payable {
@@ -80,7 +85,7 @@ contract VirtualPaymentManager is AbstractVirtualPaymentManager {
 
       delete deposits[msg.sender];
     } else {
-      deposits[msg.sender].withdrawalUnlockedAt = now.add(DEPOSIT_WITHDRAWAL_LOCK_PERIOD);
+      deposits[msg.sender].withdrawalUnlockedAt = now.add(depositWithdrawalLockPeriod);
 
       emit NewWithdrawalRequest(msg.sender, deposits[msg.sender].withdrawalUnlockedAt);
     }

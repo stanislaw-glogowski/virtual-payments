@@ -10,11 +10,6 @@ contract AbstractVirtualPaymentManager {
   event NewWithdrawalRequest(address receiver, uint256 unlockedAt);
   event NewPayment(address sender, address receiver, uint256 id, uint256 value);
 
-  uint256 constant DEPOSIT_WITHDRAWAL_LOCK_PERIOD = 1 days;
-
-  string constant ERR_INVALID_SIGNATURE = "Invalid signature";
-  string constant ERR_INVALID_VALUE = "Invalid value";
-
   struct Deposit {
     uint256 value;
     uint256 withdrawalUnlockedAt;
@@ -28,6 +23,7 @@ contract AbstractVirtualPaymentManager {
   mapping(bytes32 => Payment) public payments;
 
   address public guardian;
+  uint256 public depositWithdrawalLockPeriod;
 
   function depositPayment(
     address _sender,

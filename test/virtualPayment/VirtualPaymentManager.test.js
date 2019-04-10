@@ -16,6 +16,8 @@ const {
 const VirtualPaymentManager = artifacts.require('VirtualPaymentManager');
 
 contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
+  const LOCK_PERIOD = new BN(24 * 60 * 60); // 1 day
+
   let manager;
   let gasPrice;
 
@@ -27,6 +29,7 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
     before(async () => {
       manager = await VirtualPaymentManager.new(
         guardian,
+        LOCK_PERIOD,
       );
     });
   });
@@ -37,6 +40,7 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
     before(async () => {
       manager = await VirtualPaymentManager.new(
         guardian,
+        LOCK_PERIOD,
       );
     });
 
@@ -180,8 +184,6 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
     });
 
     describe('withdrawDeposit()', () => {
-      const LOCK_PERIOD = new BN(24 * 60 * 60); // 1 day
-
       it('expect to create withdrawal request', async () => {
         const output = await manager.withdrawDeposit({
           from: sender,

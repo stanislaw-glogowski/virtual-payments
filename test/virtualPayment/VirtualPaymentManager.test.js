@@ -26,11 +26,83 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
   });
 
   describe('views', () => {
+    const DEPOSIT_VALUE = new BN(500);
+    const PAYMENT_ID = new BN(1);
+    const PAYMENT_VALUE = new BN(200);
+
     before(async () => {
       manager = await VirtualPaymentManager.new(
         guardian,
         LOCK_PERIOD,
       );
+
+      await manager.send(DEPOSIT_VALUE, {
+        from: sender,
+      });
+
+      const messageHash = soliditySha3(
+        manager.address,
+        sender,
+        receiver,
+        PAYMENT_ID,
+        PAYMENT_VALUE,
+      );
+
+      const senderSignature = await sign(messageHash, sender);
+      const guardianSignature = await sign(messageHash, guardian);
+
+      await manager.depositPayment(
+        sender,
+        receiver,
+        PAYMENT_ID,
+        PAYMENT_VALUE,
+        senderSignature,
+        guardianSignature,
+      );
+    });
+
+    describe('guardian()', () => {
+      it('expect to return guardian address', async () => {
+        const output = await manager.guardian();
+
+        expect(output)
+          .toBe(guardian);
+      });
+    });
+
+    describe('depositWithdrawalLockPeriod()', () => {
+      it('expect to return lock period', async () => {
+        const output = await manager.depositWithdrawalLockPeriod();
+
+        expect(output)
+          .toBeBN(LOCK_PERIOD);
+      });
+    });
+
+    describe('deposits()', () => {
+      it('expect to return sender deposit', async () => {
+        const { value, withdrawalUnlockedAt } = await manager.deposits(sender);
+
+        expect(value)
+          .toBeBN(DEPOSIT_VALUE.sub(PAYMENT_VALUE));
+        expect(withdrawalUnlockedAt)
+          .toBeBN(new BN(0));
+      });
+    });
+
+    describe('payments()', () => {
+      it('expect to return sender payment', async () => {
+        const paymentHash = soliditySha3(
+          sender,
+          receiver,
+          PAYMENT_ID,
+        );
+
+        const output = await manager.payments(paymentHash);
+
+        expect(output)
+          .toBeBN(PAYMENT_VALUE);
+      });
     });
   });
 
@@ -46,9 +118,9 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
 
     describe('payable()', () => {
       it('expect to create new deposit', async () => {
-        const VALUE = new BN(500);
+        const DEPOSIT_VALUE = new BN(500);
 
-        const output = await manager.send(VALUE, {
+        const output = await manager.send(DEPOSIT_VALUE, {
           from: sender,
         });
 
@@ -60,23 +132,23 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
         expect(args.sender)
           .toBe(sender);
         expect(args.value)
-          .toBeBN(VALUE);
+          .toBeBN(DEPOSIT_VALUE);
 
-        senderDeposit = VALUE;
+        senderDeposit = DEPOSIT_VALUE;
       });
     });
 
     describe('depositPayment()', () => {
       it('expect to deposit payment', async () => {
-        const ID = new BN(1);
-        const VALUE = new BN(100);
+        const PAYMENT_ID = new BN(1);
+        const PAYMENT_VALUE = new BN(100);
 
         const messageHash = soliditySha3(
           manager.address,
           sender,
           receiver,
-          ID,
-          VALUE,
+          PAYMENT_ID,
+          PAYMENT_VALUE,
         );
 
         const senderSignature = await sign(messageHash, sender);
@@ -85,8 +157,8 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
         const output = await manager.depositPayment(
           sender,
           receiver,
-          ID,
-          VALUE,
+          PAYMENT_ID,
+          PAYMENT_VALUE,
           senderSignature,
           guardianSignature,
         );
@@ -102,9 +174,9 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
           expect(args.receiver)
             .toBe(receiver);
           expect(args.id)
-            .toBeBN(ID);
+            .toBeBN(PAYMENT_ID);
           expect(args.value)
-            .toBeBN(VALUE);
+            .toBeBN(PAYMENT_VALUE);
         }
 
         {
@@ -114,24 +186,24 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
           expect(args.sender)
             .toBe(receiver);
           expect(args.value)
-            .toBeBN(VALUE);
+            .toBeBN(PAYMENT_VALUE);
         }
 
-        senderDeposit = senderDeposit.sub(VALUE);
+        senderDeposit = senderDeposit.sub(PAYMENT_VALUE);
       });
     });
 
     describe('withdrawPayment()', () => {
       it('expect to withdraw payment', async () => {
-        const ID = new BN(2);
-        const VALUE = new BN(200);
+        const PAYMENT_ID = new BN(2);
+        const PAYMENT_VALUE = new BN(200);
 
         const messageHash = soliditySha3(
           manager.address,
           sender,
           receiver,
-          ID,
-          VALUE,
+          PAYMENT_ID,
+          PAYMENT_VALUE,
         );
 
         const senderSignature = await sign(messageHash, sender);
@@ -142,8 +214,8 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
         const output = await manager.withdrawPayment(
           sender,
           receiver,
-          ID,
-          VALUE,
+          PAYMENT_ID,
+          PAYMENT_VALUE,
           senderSignature,
           guardianSignature, {
             gasPrice,
@@ -161,9 +233,9 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
           expect(args.receiver)
             .toBe(receiver);
           expect(args.id)
-            .toBeBN(ID);
+            .toBeBN(PAYMENT_ID);
           expect(args.value)
-            .toBeBN(VALUE);
+            .toBeBN(PAYMENT_VALUE);
         }
 
         {
@@ -173,13 +245,13 @@ contract('VirtualPaymentManager', ([guardian, sender, receiver]) => {
           expect(args.receiver)
             .toBe(receiver);
           expect(args.value)
-            .toBeBN(VALUE);
+            .toBeBN(PAYMENT_VALUE);
         }
 
         expect(await getBalance(receiver))
-          .toBeBN(receiverBalance.add(VALUE));
+          .toBeBN(receiverBalance.add(PAYMENT_VALUE));
 
-        senderDeposit = senderDeposit.sub(VALUE);
+        senderDeposit = senderDeposit.sub(PAYMENT_VALUE);
       });
     });
 
